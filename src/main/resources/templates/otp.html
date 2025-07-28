@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Enter OTP | Chatty</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="container">
+    <h1>OTP Verification</h1>
+    <h2>Check your email [<span th:text="${email}"></span>]</h2>
+
+
+    <form th:action="@{/verify-otp}" method="post">
+        <!-- Hidden input to pass email -->
+        <input type="hidden" name="email" th:value="${email}"/>
+
+        <label for="otpCode">Enter OTP Code</label>
+        <input type="text" id="otpCode" name="otpCode" placeholder="6-digit code" required>
+
+        <input type="submit" value="Verify & Continue">
+    </form>
+
+    <!-- Show error if any -->
+    <p class="error" th:if="${error}" th:text="${error}"></p>
+</div>
+</body>
+</html>
