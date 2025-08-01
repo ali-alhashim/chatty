@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Dashboard | Chatty</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="chat-layout">
+    <!-- Sidebar: Contacts -->
+    <div class="sidebar">
+        <!-- Header: Search and Add -->
+        <div class="sidebar-header">
+
+            <div class="row">
+                <div class="col">
+                    <img th:src="@{'/'+${currentUser.avatar}}" alt="avatar" width="64" height="64">
+                </div>
+                <div class="col">
+                    <span th:text="${currentUser.name}">current user name</span>
+                </div>
+            </div>
+
+            <div class="row">
+                <form id="addContactForm" method="post" th:action="@{/add-contact}">
+                <input type="text" id="contactSearch" placeholder="Search contacts..." oninput="filterContacts()" list="userSuggestions">
+                <datalist id="userSuggestions"></datalist>
+                <button type="submit">➕</button>
+                </form>
+
+            </div>
+        </div>
+
+        <!-- Contact List -->
+        <div id="contactList">
+            <div th:each="contact : ${contacts}" class="contact"
+                 th:onclick="'location.href=\'/chat?contactId=' + ${contact.id} + '\';'"
+                 th:attr="data-name=${contact.name.toLowerCase()}">
+                <img th:src="@{'/'+${contact.avatar}}" alt="avatar" width="64" height="64">
+                <div class="contact-name" th:text="${contact.name}">Contact Name</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="chat-box">
+        <div class="chat-header" th:text="${contactName}">Select a contact to start chatting</div>
+
+        <div class="chat-messages">
+            <div th:each="msg : ${messages}">
+                <p th:text="${msg.senderName + ': ' + msg.content}">Sender: Message</p>
+            </div>
+        </div>
+
+        <form class="chat-input" th:action="@{/send-message}" method="post">
+            <input type="hidden" name="contactId" th:value="${contactId}"/>
+            <input type="text" name="message" placeholder="Type a message..." required />
+            <button type="submit">Send</button>
+        </form>
+    </div>
+</div>
+
+<!-- JavaScript for Search -->
+<script>
+    function filterContacts() {
+        const input = document.getElementById("contactSearch");
+        const search = input.value.trim().toLowerCase();
+        const contacts = document.querySelectorAll("#contactList .contact");
+        const suggestions = document.getElementById("userSuggestions");
+
+        // Filter existing contacts
+        contacts.forEach(contact => {
+            const name = contact.getAttribute("data-name");
+            contact.style.display = name.includes(search) ? "flex" : "none";
+        });
+
+        // Suggest users from server if 3+ chars
+        if (search.length >= 3) {
+            fetch(`/search-users?query=${encodeURIComponent(search)}`)
+                .then(res => res.json())
+                .then(users => {
+                    suggestions.innerHTML = "";
+                    users.forEach(user => {
+                        const option = document.createElement("option");
+                        option.value = user.name;
+                        suggestions.appendChild(option);
+                    });
+                })
+                .catch(console.error);
+        } else {
+            suggestions.innerHTML = "";
+        }
+    }
+</script>
+
+</body>
+</html>

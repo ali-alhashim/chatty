@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile Setup</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="container">
+    <h2>Profile Setup</h2>
+
+    <div th:if="${error}" class="error" th:text="${error}"></div>
+
+    <form th:action="@{/profile-setup}" method="post" enctype="multipart/form-data">
+        <label for="name">Nickname that can other user add you this can't be change </label>
+        <input type="text" id="name" name="name" th:value="${user.name}" required>
+
+        <label for="avatar">Avatar Image</label>
+        <input type="file" id="avatar" name="avatar" accept="image/*">
+
+        <input type="submit" value="Save Profile">
+    </form>
+</div>
+</body>
+</html>

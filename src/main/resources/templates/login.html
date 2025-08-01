@@ -11,8 +11,8 @@
     <h2>Login with Email</h2>
 
     <form th:action="@{/send-otp}" method="post">
-        <label for="email">Email Address</label>
-        <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="true">
+        <label for="email">Email Address Or Nickname</label>
+        <input type="text" id="email" name="email" placeholder="you@example.com" required autocomplete="true" />
 
         <input type="submit" value="Send OTP">
     </form>

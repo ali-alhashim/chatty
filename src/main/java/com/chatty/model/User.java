@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "users")
@@ -21,7 +22,8 @@ public class User {
 
     private String avatar; //image URL in uploads/[name]/image
 
-    private List<String> contactIds;
+    private List<String> contactIds = new ArrayList<>();
+
 
     private LocalDateTime createdAt;
     private LocalDateTime lastLoginAt;
