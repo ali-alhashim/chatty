@@ -29,10 +29,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Principal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Controller
@@ -59,13 +57,18 @@ public class ChatController {
     private String appUploadsBaseDir;
 
     @GetMapping({"/", "/dashboard"})
-    public String chatDashboard(Model model, Principal principal)
+    public String chatDashboard(Model model, Principal principal, @RequestParam(required = false) String contactId)
     {
         User currentUser = (User) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
         List<User> contacts = userRepository.findAllById(currentUser.getContactIds());
 
         List<ContactRequest> pendingRequests = contactRequestRepository.findByReceiverIdAndStatus(currentUser.getId(), ContactRequestStatus.PENDING);
         List<ContactRequest> pendingResponses= contactRequestRepository.findBySenderIdAndStatus(currentUser.getId(), ContactRequestStatus.PENDING);
+
+        if(contactId !=null)
+        {
+            model.addAttribute("contactId", contactId);
+        }
 
         model.addAttribute("baseUrlWS", appConfig.getBaseUrl_ws());
         model.addAttribute("pendingResponses", pendingResponses);
@@ -192,6 +195,60 @@ public class ChatController {
 
         userService.addContact(currentUser.getId(), found.get().getId());
         System.out.println(currentUser.getName() + "Send Request to add "+ found.get().getName());
+        return "redirect:/dashboard";
+    }
+
+
+
+    @PostMapping("/contact-request/accept")
+    public String acceptRequest(@RequestParam String requestId, RedirectAttributes redirectAttributes, Principal principal)
+    {
+        ContactRequest request = contactRequestRepository.findById(requestId).orElse(null);
+        if(request ==null)
+        {
+            redirectAttributes.addFlashAttribute("error", "Request not found.");
+            return "redirect:/dashboard";
+        }
+
+        //make sure the request is for current user
+        User currentUser = (User) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
+        if(currentUser ==null)
+        {
+            redirectAttributes.addFlashAttribute("error", "user not found.");
+            return "redirect:/dashboard";
+        }
+
+        if(!Objects.equals(currentUser.getId(), request.getReceiverId()))
+        {
+            redirectAttributes.addFlashAttribute("error", "this request not for you !");
+            return "redirect:/dashboard";
+        }
+
+        //ok the request is for the receiver = currentUser so we update the status
+        request.setRespondedAt(LocalDateTime.now());
+        request.setStatus(ContactRequestStatus.ACCEPTED);
+        contactRequestRepository.save(request);
+
+        // ok because the receiver accept so we add in both side as contact
+        List<String> receiverContacts = currentUser.getContactIds(); //get current contacts
+        receiverContacts.add(request.getSenderId()); //add the new contact
+        currentUser.setContactIds(receiverContacts); // set all contacts back
+        userRepository.save(currentUser); // save
+
+        User  senderUser = userRepository.findById(request.getSenderId()).orElse(null);
+        if(senderUser ==null)
+        {
+            redirectAttributes.addFlashAttribute("error", "sender not found !");
+            return "redirect:/dashboard";
+        }
+
+        List<String> senderContacts = senderUser.getContactIds();
+        senderContacts.add(request.getReceiverId());
+        senderUser.setContactIds(senderContacts);
+        userRepository.save(senderUser);
+
+        //inform the sender by websocket that the pending response has been updated so show it as contact now
+
         return "redirect:/dashboard";
     }
 

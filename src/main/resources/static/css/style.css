@@ -235,3 +235,8 @@ input[type="submit"]:hover {
 gap:1rem;
 }
 
+.active-contact {
+ border-left: 4px solid #04AA6D;
+background-color: #e6e6e6;
+}
+

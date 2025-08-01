@@ -76,11 +76,12 @@
 
             <!-- Contact List -->
             <div th:each="contact : ${contacts}" class="contact"
-                 th:onclick="'location.href=\'/chat?contactId=' + ${contact.id} + '\';'"
-                 th:attr="data-name=${contact.name.toLowerCase()}">
+                 th:attr="data-contact-id=${contact.id}, data-name=${contact.name.toLowerCase()}">
                 <img th:src="@{'/'+${contact.avatar}}" alt="avatar" width="64" height="64">
                 <div class="contact-name" th:text="${contact.name}">Contact Name</div>
             </div>
+
+
         </div>
     </div>
 
@@ -185,6 +186,31 @@
             <div class="contact-name">${response.receiverName}</div>
         `;
         container.appendChild(div);
+    }
+</script>
+
+<!-- chat with selected contact -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".contact").forEach(function (el) {
+            el.addEventListener("click", function () {
+                const contactId = this.dataset.contactId;
+                window.location.href = `/dashboard?contactId=${contactId}`;
+            });
+        });
+    });
+</script>
+
+
+<!-- set active contact -->
+<script th:inline="javascript">
+    const activeId = /*[[${contactId}]]*/ null;
+
+    if (activeId) {
+        const activeContact = document.querySelector(`.contact[data-contact-id="${activeId}"]`);
+        if (activeContact) {
+            activeContact.classList.add("active-contact");
+        }
     }
 </script>
 
