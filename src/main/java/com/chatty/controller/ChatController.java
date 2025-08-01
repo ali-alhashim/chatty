@@ -1,7 +1,10 @@
 package com.chatty.controller;
 
+import com.chatty.Enum.ContactRequestStatus;
 import com.chatty.config.FileStorageException;
+import com.chatty.model.ContactRequest;
 import com.chatty.model.User;
+import com.chatty.repository.ContactRequestRepository;
 import com.chatty.repository.UserRepository;
 import com.chatty.service.FileStorageService;
 import com.chatty.service.UserService;
@@ -44,6 +47,9 @@ public class ChatController {
     @Autowired
     UserService userService;
 
+    @Autowired
+    ContactRequestRepository contactRequestRepository;
+
 
     @Value("${app.uploads-base-dir}")
     private String appUploadsBaseDir;
@@ -54,6 +60,11 @@ public class ChatController {
         User currentUser = (User) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
         List<User> contacts = userRepository.findAllById(currentUser.getContactIds());
 
+        List<ContactRequest> pendingRequests = contactRequestRepository.findByReceiverIdAndStatus(currentUser.getId(), ContactRequestStatus.PENDING);
+        List<ContactRequest> pendingResponses= contactRequestRepository.findBySenderIdAndStatus(currentUser.getId(), ContactRequestStatus.PENDING);
+
+        model.addAttribute("pendingResponses", pendingResponses);
+        model.addAttribute("pendingRequests",pendingRequests);
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("contacts", contacts);
         return "chat-dashboard";
@@ -115,15 +126,11 @@ public class ChatController {
     public ResponseEntity<byte[]> getAvatar(@PathVariable String userId,
                                             @PathVariable String filename,
                                             HttpSession session) throws IOException {
-        User requester = (User) session.getAttribute("user");
 
-        // Check if the requester is the user or one of their contacts
-        boolean isOwner = requester.getId().equals(userId);
-        boolean isContact = userService.isContact(requester.getId(), userId);
 
-        if (!isOwner && !isContact) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+
+
+
 
         Path uploadsDir = Paths.get(appUploadsBaseDir).toAbsolutePath().normalize();
         Path avatarPath = uploadsDir.resolve(userId).resolve("avatar").resolve(filename).normalize();
@@ -168,6 +175,8 @@ public class ChatController {
 
     @PostMapping("/add-contact")
     public String addContact(@RequestParam String contactSearch, HttpSession session, RedirectAttributes redirectAttributes) {
+
+
         User currentUser = (User) session.getAttribute("user");
         Optional<User> found = userRepository.findByName(contactSearch);
 
@@ -177,6 +186,7 @@ public class ChatController {
         }
 
         userService.addContact(currentUser.getId(), found.get().getId());
+        System.out.println(currentUser.getName() + "Send Request to add "+ found.get().getName());
         return "redirect:/dashboard";
     }
 

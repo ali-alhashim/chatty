@@ -23,7 +23,7 @@
 
             <div class="row">
                 <form id="addContactForm" method="post" th:action="@{/add-contact}">
-                <input type="text" id="contactSearch" placeholder="Search contacts..." oninput="filterContacts()" list="userSuggestions">
+                <input type="text" id="contactSearch" name="contactSearch" placeholder="Search contacts..." oninput="filterContacts()" list="userSuggestions" />
                 <datalist id="userSuggestions"></datalist>
                 <button type="submit">➕</button>
                 </form>
@@ -31,8 +31,41 @@
             </div>
         </div>
 
-        <!-- Contact List -->
+
         <div id="contactList">
+            <!-- list of pending request -->
+            <div th:if="${pendingRequests != null and !pendingRequests.isEmpty()}">
+                <h4>Pending Requests</h4>
+
+                <div th:each="request : ${pendingRequests}" class="contact pending-request">
+                    <img th:src="@{'/'+${request.senderAvatar}}" alt="avatar" width="64" height="64">
+                    <div class="contact-name" th:text="${request.senderName}">Sender Name</div>
+
+                    <form th:action="@{/contact-request/accept}" method="post" style="display: inline;">
+                        <input type="hidden" name="requestId" th:value="${request.id}" />
+                        <button type="submit">✔</button>
+                    </form>
+
+                    <form th:action="@{/contact-request/reject}" method="post" style="display: inline;">
+                        <input type="hidden" name="requestId" th:value="${request.id}" />
+                        <button type="submit">✖</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- list of waiting response -->
+            <div th:if="${pendingResponses != null and !pendingResponses.isEmpty()}">
+                <h4>Pending Response</h4>
+
+                <div th:each="request : ${pendingResponses}" class="contact pending-request">
+                    <img th:src="@{'/'+${request.receiverAvatar}}" alt="avatar" width="64" height="64">
+                    <div class="contact-name" th:text="${request.receiverName}">Receiver Name</div>
+
+                </div>
+            </div>
+
+
+            <!-- Contact List -->
             <div th:each="contact : ${contacts}" class="contact"
                  th:onclick="'location.href=\'/chat?contactId=' + ${contact.id} + '\';'"
                  th:attr="data-name=${contact.name.toLowerCase()}">
@@ -68,7 +101,7 @@
         const contacts = document.querySelectorAll("#contactList .contact");
         const suggestions = document.getElementById("userSuggestions");
 
-        // Filter existing contacts
+
         contacts.forEach(contact => {
             const name = contact.getAttribute("data-name");
             contact.style.display = name.includes(search) ? "flex" : "none";

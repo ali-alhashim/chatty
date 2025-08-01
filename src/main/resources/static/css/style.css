@@ -214,3 +214,19 @@ input[type="submit"]:hover {
     cursor: pointer;
     white-space: nowrap;
 }
+
+
+
+
+.pending-request {
+    background-color: #ffe4e1;
+    padding: 10px;
+    border: 1px solid #ff9999;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.pending-request button {
+    margin-left: 5px;
+}
