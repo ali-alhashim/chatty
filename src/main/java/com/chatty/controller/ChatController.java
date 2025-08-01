@@ -1,6 +1,7 @@
 package com.chatty.controller;
 
 import com.chatty.Enum.ContactRequestStatus;
+import com.chatty.config.AppConfig;
 import com.chatty.config.FileStorageException;
 import com.chatty.model.ContactRequest;
 import com.chatty.model.User;
@@ -50,6 +51,9 @@ public class ChatController {
     @Autowired
     ContactRequestRepository contactRequestRepository;
 
+    @Autowired
+    AppConfig appConfig;
+
 
     @Value("${app.uploads-base-dir}")
     private String appUploadsBaseDir;
@@ -63,6 +67,7 @@ public class ChatController {
         List<ContactRequest> pendingRequests = contactRequestRepository.findByReceiverIdAndStatus(currentUser.getId(), ContactRequestStatus.PENDING);
         List<ContactRequest> pendingResponses= contactRequestRepository.findBySenderIdAndStatus(currentUser.getId(), ContactRequestStatus.PENDING);
 
+        model.addAttribute("baseUrlWS", appConfig.getBaseUrl_ws());
         model.addAttribute("pendingResponses", pendingResponses);
         model.addAttribute("pendingRequests",pendingRequests);
         model.addAttribute("currentUser", currentUser);

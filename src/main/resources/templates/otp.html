@@ -8,10 +8,10 @@
 <body>
 <div class="container">
     <h1>OTP Verification</h1>
-    <h2>Check your email [<span th:text="${email}"></span>]</h2>
+    <h4>Check your email [<span th:text="${email}"></span>]</h4>
 
 
-    <form th:action="@{/verify-otp}" method="post">
+    <form th:action="@{/verify-otp}" method="post" class="g-1 col">
         <!-- Hidden input to pass email -->
         <input type="hidden" name="email" th:value="${email}"/>
 

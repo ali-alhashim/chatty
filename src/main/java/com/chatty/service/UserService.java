@@ -2,6 +2,7 @@ package com.chatty.service;
 
 
 import com.chatty.Enum.ContactRequestStatus;
+import com.chatty.component.ContactWebSocketHandler;
 import com.chatty.model.ContactRequest;
 import com.chatty.model.User;
 import com.chatty.repository.ContactRequestRepository;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -24,6 +26,9 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ContactWebSocketHandler webSocketHandler;
+
     public boolean isContact(String requesterId, String userId)
     {
         return userRepository.findById(requesterId)
@@ -31,6 +36,7 @@ public class UserService {
                 .orElse(false);
     }
 
+    //Add Contact Request
      public void addContact(String senderId, String receiverId)
     {
         // Check if request already exists
@@ -60,6 +66,18 @@ public class UserService {
         request.setStatus(ContactRequestStatus.PENDING);
         request.setRequestedAt(LocalDateTime.now());
         contactRequestRepository.save(request);
+
+        // 🔥 Broadcast to clients
+        webSocketHandler.broadcast(
+                Map.of(
+                        "id", request.getId(),
+                        "senderName", request.getSenderName(),
+                        "senderAvatar", request.getSenderAvatar(),
+                        "receiverName", request.getReceiverName(),
+                        "receiverAvatar", request.getReceiverAvatar()
+                ),
+                "NEW_REQUEST"
+        );
 
     }
 

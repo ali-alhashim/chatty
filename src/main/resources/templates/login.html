@@ -10,9 +10,9 @@
     <h1>Welcome to Chatty</h1>
     <h2>Login with Email</h2>
 
-    <form th:action="@{/send-otp}" method="post">
+    <form th:action="@{/send-otp}" method="post" class="g-1 col">
         <label for="email">Email Address Or Nickname</label>
-        <input type="text" id="email" name="email" placeholder="you@example.com" required autocomplete="true" />
+        <input type="text" id="email" name="email" placeholder="you@example.com or ali if you registered" required autocomplete="true" />
 
         <input type="submit" value="Send OTP">
     </form>

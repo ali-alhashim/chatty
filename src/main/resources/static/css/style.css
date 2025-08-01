@@ -65,7 +65,7 @@ input[type="submit"] {
     background-color: var(--primary-color);
     color: white;
     padding: 12px;
-    margin-top: 10px;
+
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -230,3 +230,8 @@ input[type="submit"]:hover {
 .pending-request button {
     margin-left: 5px;
 }
+
+.g-1{
+gap:1rem;
+}
+
