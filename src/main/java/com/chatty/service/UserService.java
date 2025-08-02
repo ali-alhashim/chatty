@@ -68,16 +68,9 @@ public class UserService {
         contactRequestRepository.save(request);
 
         // 🔥 Broadcast to clients
-        webSocketHandler.broadcast(
-                Map.of(
-                        "id", request.getId(),
-                        "senderName", request.getSenderName(),
-                        "senderAvatar", request.getSenderAvatar(),
-                        "receiverName", request.getReceiverName(),
-                        "receiverAvatar", request.getReceiverAvatar()
-                ),
-                "NEW_REQUEST"
-        );
+        webSocketHandler.sendToUser(request.getReceiverId(), request, "NEW_REQUEST");
+        webSocketHandler.sendToUser(request.getSenderId(), request, "NEW_RESPONSE");
+
 
     }
 

@@ -87,7 +87,10 @@
 
     <!-- Chat Area -->
     <div class="chat-box">
-        <div class="chat-header" th:text="${contactName}">Select a contact to start chatting</div>
+        <div class="chat-header">
+            <img  th:if="${selectedContact !=null}" th:src="@{'/'+${selectedContact.avatar}}" alt="avatar" width="64" height="64">
+            <span th:if="${selectedContact !=null}" th:text="${selectedContact.name}">Contact Name</span>
+        </div>
 
         <div class="chat-messages">
             <div th:each="msg : ${messages}">
@@ -139,7 +142,9 @@
 
 <!-- Websocket -->
 <script th:inline="javascript">
-    const socket = new WebSocket([[${baseUrlWS}]] + "/ws");
+
+    const userId = /*[[${currentUser.id}]]*/ 'anonymous';
+    const socket = new WebSocket([[${baseUrlWS}]] + "/ws?userId=" + encodeURIComponent(userId));
 
     socket.onopen = () => {
         console.log("WebSocket connected.");
@@ -147,11 +152,16 @@
 
     socket.onmessage = (event) => {
         const message = JSON.parse(event.data);
+        console.log(message);
 
         if (message.type === "NEW_REQUEST") {
             addPendingRequest(message.data);
         } else if (message.type === "NEW_RESPONSE") {
             addPendingResponse(message.data);
+        }
+         else if (message.type === "REQUEST_ACCEPTED") {
+            alert(`${message.data.receiverName} accepted your contact request!`);
+            location.href = "/dashboard";
         }
     };
 
@@ -213,6 +223,8 @@
         }
     }
 </script>
+
+
 
 
 </body>

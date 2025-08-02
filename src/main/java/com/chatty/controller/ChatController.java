@@ -1,6 +1,7 @@
 package com.chatty.controller;
 
 import com.chatty.Enum.ContactRequestStatus;
+import com.chatty.component.ContactWebSocketHandler;
 import com.chatty.config.AppConfig;
 import com.chatty.config.FileStorageException;
 import com.chatty.model.ContactRequest;
@@ -52,12 +53,15 @@ public class ChatController {
     @Autowired
     AppConfig appConfig;
 
+    @Autowired
+    private ContactWebSocketHandler webSocketHandler;
+
 
     @Value("${app.uploads-base-dir}")
     private String appUploadsBaseDir;
 
     @GetMapping({"/", "/dashboard"})
-    public String chatDashboard(Model model, Principal principal, @RequestParam(required = false) String contactId)
+    public String chatDashboard(Model model, Principal principal, @RequestParam(required = false) String contactId, RedirectAttributes redirectAttributes)
     {
         User currentUser = (User) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
         List<User> contacts = userRepository.findAllById(currentUser.getContactIds());
@@ -68,6 +72,16 @@ public class ChatController {
         if(contactId !=null)
         {
             model.addAttribute("contactId", contactId);
+            //So user select a contact to chat with contactId load chat history
+            //and send contact avatar and name
+            User selectedContact = userRepository.findById(contactId).orElse(null);
+            if(selectedContact ==null)
+            {
+                redirectAttributes.addFlashAttribute("error", "you select contact not exist");
+                return "redirect:/dashboard";
+            }
+
+            model.addAttribute("selectedContact", selectedContact);
         }
 
         model.addAttribute("baseUrlWS", appConfig.getBaseUrl_ws());
@@ -203,6 +217,10 @@ public class ChatController {
     @PostMapping("/contact-request/accept")
     public String acceptRequest(@RequestParam String requestId, RedirectAttributes redirectAttributes, Principal principal)
     {
+
+
+
+
         ContactRequest request = contactRequestRepository.findById(requestId).orElse(null);
         if(request ==null)
         {
@@ -225,6 +243,8 @@ public class ChatController {
         }
 
         //ok the request is for the receiver = currentUser so we update the status
+        System.out.println("ok the request is for the receiver = currentUser so we update the status");
+
         request.setRespondedAt(LocalDateTime.now());
         request.setStatus(ContactRequestStatus.ACCEPTED);
         contactRequestRepository.save(request);
@@ -248,6 +268,9 @@ public class ChatController {
         userRepository.save(senderUser);
 
         //inform the sender by websocket that the pending response has been updated so show it as contact now
+        // 🔥 Broadcast to clients
+        webSocketHandler.sendToUser(request.getSenderId(), request, "REQUEST_ACCEPTED");
+        webSocketHandler.sendToUser(request.getReceiverId(), request, "REQUEST_ACCEPTED");
 
         return "redirect:/dashboard";
     }
