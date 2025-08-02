@@ -31,6 +31,8 @@ public class ContactWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) {
         String userId = getUserIdFromSession(session);
         if (userId != null) {
+
+            System.out.println("afterConnectionEstablished set userSessions put userId:"+userId);
             userSessions.put(userId, session);
             sessions.add(session);
         }
@@ -60,7 +62,7 @@ public class ContactWebSocketHandler extends TextWebSocketHandler {
                 String json = objectMapper.writeValueAsString(new WebSocketMessage(type, payload));
                 session.sendMessage(new TextMessage(json));
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println(e.getMessage());
             }
         }
     }
@@ -79,7 +81,7 @@ public class ContactWebSocketHandler extends TextWebSocketHandler {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 

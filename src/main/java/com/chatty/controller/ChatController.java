@@ -63,7 +63,14 @@ public class ChatController {
     @GetMapping({"/", "/dashboard"})
     public String chatDashboard(Model model, Principal principal, @RequestParam(required = false) String contactId, RedirectAttributes redirectAttributes)
     {
-        User currentUser = (User) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
+        User sessionUser = (User) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
+        User currentUser = userRepository.findById(sessionUser.getId()).orElse(null);
+        if(currentUser ==null)
+        {
+            redirectAttributes.addFlashAttribute("error", "you need to login");
+            return "redirect:/login";
+        }
+
         List<User> contacts = userRepository.findAllById(currentUser.getContactIds());
 
         List<ContactRequest> pendingRequests = contactRequestRepository.findByReceiverIdAndStatus(currentUser.getId(), ContactRequestStatus.PENDING);
@@ -207,19 +214,21 @@ public class ChatController {
             return "redirect:/dashboard";
         }
 
-        userService.addContact(currentUser.getId(), found.get().getId());
-        System.out.println(currentUser.getName() + "Send Request to add "+ found.get().getName());
+        String addRequestResult = userService.addContactRequest(currentUser.getId(), found.get().getId());
+
+        redirectAttributes.addFlashAttribute("message", addRequestResult);
+        System.out.println(currentUser.getName() + "Send Request to add "+ found.get().getName() + "Result:"+addRequestResult);
         return "redirect:/dashboard";
     }
 
 
 
     @PostMapping("/contact-request/accept")
-    public String acceptRequest(@RequestParam String requestId, RedirectAttributes redirectAttributes, Principal principal)
+    public String acceptRequest(@RequestParam String requestId, RedirectAttributes redirectAttributes, Principal principal, HttpSession session)
     {
 
 
-
+        System.out.println("acceptRequest ....");
 
         ContactRequest request = contactRequestRepository.findById(requestId).orElse(null);
         if(request ==null)
@@ -271,6 +280,10 @@ public class ChatController {
         // 🔥 Broadcast to clients
         webSocketHandler.sendToUser(request.getSenderId(), request, "REQUEST_ACCEPTED");
         webSocketHandler.sendToUser(request.getReceiverId(), request, "REQUEST_ACCEPTED");
+
+        // 🔁 Refresh currentUser with updated data
+        User updatedUser = userRepository.findById(currentUser.getId()).orElse(null);
+        session.setAttribute("user", updatedUser);
 
         return "redirect:/dashboard";
     }

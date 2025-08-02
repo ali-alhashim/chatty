@@ -88,6 +88,8 @@
     <!-- Chat Area -->
     <div class="chat-box">
         <div class="chat-header">
+            <p class="error" th:if="${error}" th:text="${error}"></p>
+            <p class="error" th:if="${message}" th:text="${message}"></p>
             <img  th:if="${selectedContact !=null}" th:src="@{'/'+${selectedContact.avatar}}" alt="avatar" width="64" height="64">
             <span th:if="${selectedContact !=null}" th:text="${selectedContact.name}">Contact Name</span>
         </div>
@@ -169,6 +171,9 @@
     socket.onclose = () => console.log("WebSocket disconnected.");
 
     function addPendingRequest(request) {
+         const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+         const csrfParam = '_csrf';
+
         const container = document.getElementById("pending-requests-container");
         const div = document.createElement("div");
         div.classList.add("contact", "pending-request");
@@ -176,10 +181,12 @@
             <img src="/${request.senderAvatar}" alt="avatar" width="64" height="64">
             <div class="contact-name">${request.senderName}</div>
             <form action="/contact-request/accept" method="post" style="display: inline;">
+                <input type="hidden" name="${csrfParam}" value="${csrfToken}" />
                 <input type="hidden" name="requestId" value="${request.id}" />
                 <button type="submit">✔</button>
             </form>
             <form action="/contact-request/reject" method="post" style="display: inline;">
+                <input type="hidden" name="${csrfParam}" value="${csrfToken}" />
                 <input type="hidden" name="requestId" value="${request.id}" />
                 <button type="submit">✖</button>
             </form>

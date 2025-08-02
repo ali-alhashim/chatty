@@ -37,23 +37,31 @@ public class UserService {
     }
 
     //Add Contact Request
-     public void addContact(String senderId, String receiverId)
+     public String addContactRequest(String senderId, String receiverId)
     {
         // Check if request already exists
         Optional<ContactRequest> existing = contactRequestRepository.findBySenderIdAndReceiverIdAndStatus(senderId, receiverId, ContactRequestStatus.PENDING);
         if (existing.isPresent()) {
-            throw new RuntimeException("Contact request already sent.");
+            System.out.println("Contact request already sent.");
+            return "Contact request already sent.";
+        }
+
+        //What if the user is already exist and added so don't send request
+        Optional<ContactRequest> existing2 = contactRequestRepository.findBySenderIdAndReceiverIdAndStatus(senderId, receiverId, ContactRequestStatus.ACCEPTED);
+        if (existing2.isPresent()) {
+            System.out.println("Contact  already exist ");
+            return "Contact  already exist.";
         }
 
         User senderUser = userRepository.findById(senderId).orElse(null);
         User receiverUser = userRepository.findById(receiverId).orElse(null);
         if(senderUser ==null)
         {
-            throw new RuntimeException("sender user not exist");
+            return "sender user not exist";
         }
         if(receiverUser ==null)
         {
-            throw new RuntimeException("receiver user not exist");
+            return "receiver user not exist";
         }
 
         ContactRequest request = new ContactRequest();
@@ -71,6 +79,7 @@ public class UserService {
         webSocketHandler.sendToUser(request.getReceiverId(), request, "NEW_REQUEST");
         webSocketHandler.sendToUser(request.getSenderId(), request, "NEW_RESPONSE");
 
+        return "Request has been sent successfully";
 
     }
 
