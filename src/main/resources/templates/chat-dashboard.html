@@ -95,9 +95,14 @@
         </div>
 
         <div class="chat-messages">
-            <div th:each="msg : ${messages}">
-                <p th:text="${msg.senderName + ': ' + msg.content}">Sender: Message</p>
+
+
+            <div th:each="msg : ${messages}"
+                 th:classappend="${msg.senderId == currentUser.id} ? 'message-outgoing' : 'message-incoming'">
+                <p th:text="${msg.message}">message</p>
             </div>
+
+
         </div>
 
         <form class="chat-input" th:action="@{/send-message}" method="post">
@@ -165,6 +170,9 @@
             alert(`${message.data.receiverName} accepted your contact request!`);
             location.href = "/dashboard";
         }
+        else if (message.type === "NEW_MESSAGE") {
+               handleNewMessage(message.data);
+        }
     };
 
     socket.onerror = (e) => console.error("WebSocket error:", e);
@@ -205,6 +213,56 @@
         `;
         container.appendChild(div);
     }
+
+
+
+    //function handleNewMessage ---------
+
+     function handleNewMessage(data) {
+        const currentContactId = /*[[${contactId}]]*/ null;
+        const userId = /*[[${currentUser.id}]]*/ 'anonymous';
+
+        const isCurrentChat = (data.senderId === currentContactId || data.receiverId === currentContactId);
+
+        // CASE 1: If user is chatting with the sender/receiver, append message
+        if (isCurrentChat) {
+            const chatMessages = document.querySelector(".chat-messages");
+
+            const div = document.createElement("div");
+            div.classList.add(data.senderId === userId ? "message-outgoing" : "message-incoming");
+
+            const p = document.createElement("p");
+            p.textContent = data.message;
+
+            div.appendChild(p);
+            chatMessages.appendChild(div);
+
+
+            // Optional: Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // CASE 2: If user is not in that chat, highlight contact or add badge
+        else {
+            const contact = document.querySelector(`.contact[data-contact-id="${data.senderId}"]`)
+                || document.querySelector(`.contact[data-contact-id="${data.receiverId}"]`);
+
+            if (contact) {
+                contact.classList.add("has-new-message");
+
+                // Optional: add a red dot
+                if (!contact.querySelector(".notification-dot")) {
+                    const dot = document.createElement("span");
+                    dot.className = "notification-dot";
+                    dot.style.cssText = "width:10px;height:10px;background:red;border-radius:50%;display:inline-block;margin-left:8px;";
+                    contact.querySelector(".contact-name").appendChild(dot);
+                }
+            }
+        }
+    }
+
+    //--------------
+
 </script>
 
 <!-- chat with selected contact -->

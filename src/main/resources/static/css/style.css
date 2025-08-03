@@ -240,3 +240,27 @@ gap:1rem;
 background-color: #e6e6e6;
 }
 
+.has-new-message {
+    background-color: #ffecec;
+    font-weight: bold;
+}
+
+.message-incoming {
+    text-align: left;
+    background-color: #f1f1f1;
+    padding: 8px 12px;
+    margin: 6px;
+    border-radius: 10px;
+    max-width: 60%;
+}
+
+.message-outgoing {
+    text-align: right;
+    background-color: #d1e7ff;
+    padding: 8px 12px;
+    margin: 6px;
+    border-radius: 10px;
+    margin-left: auto;
+    max-width: 60%;
+}
+

@@ -4,8 +4,10 @@ import com.chatty.Enum.ContactRequestStatus;
 import com.chatty.component.ContactWebSocketHandler;
 import com.chatty.config.AppConfig;
 import com.chatty.config.FileStorageException;
+import com.chatty.model.ChatMessage;
 import com.chatty.model.ContactRequest;
 import com.chatty.model.User;
+import com.chatty.repository.ChatMessageRepository;
 import com.chatty.repository.ContactRequestRepository;
 import com.chatty.repository.UserRepository;
 import com.chatty.service.FileStorageService;
@@ -43,6 +45,8 @@ public class ChatController {
     @Autowired
     FileStorageService fileStorageService;
 
+    @Autowired
+    ChatMessageRepository chatMessageRepository;
 
     @Autowired
     UserService userService;
@@ -88,8 +92,13 @@ public class ChatController {
                 return "redirect:/dashboard";
             }
 
+            List<ChatMessage> messages = chatMessageRepository.findConversation(currentUser.getId(), contactId);
+
             model.addAttribute("selectedContact", selectedContact);
+            model.addAttribute("messages", messages);
         }
+
+
 
         model.addAttribute("baseUrlWS", appConfig.getBaseUrl_ws());
         model.addAttribute("pendingResponses", pendingResponses);
@@ -297,6 +306,37 @@ public class ChatController {
         session.setAttribute("user", updatedUser);
 
         return "redirect:/dashboard";
+    }
+
+
+    @PostMapping("/send-message")
+    public String sendMessage(@RequestParam String contactId, @RequestParam String message, HttpSession session)
+    {
+        User sessionUser = (User) session.getAttribute("user");
+        User currentUser = userRepository.findById(sessionUser.getId()).orElse(null);
+        User receiverUser= userRepository.findById(contactId).orElse(null);
+        if(currentUser ==null)
+        {
+            System.out.println("sender user is null");
+        }
+        if(receiverUser ==null)
+        {
+            System.out.println("receiver user is null");
+        }
+
+        //Save the Message
+        ChatMessage chatMessage = new ChatMessage();
+        chatMessage.setMessage(message);
+        chatMessage.setSenderId(currentUser.getId());
+        chatMessage.setReceiverId(receiverUser.getId());
+        chatMessage.setSentAt(LocalDateTime.now());
+        chatMessageRepository.save(chatMessage);
+
+        //send it with websocket to receiver user
+        webSocketHandler.sendToUser(receiverUser.getId(), chatMessage, "NEW_MESSAGE");
+
+        return "redirect:/dashboard?contactId="+contactId;
+
     }
 
 
