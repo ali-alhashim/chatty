@@ -77,8 +77,9 @@ public class UserService {
 
         // 🔥 Broadcast to clients
         webSocketHandler.sendToUser(request.getReceiverId(), request, "NEW_REQUEST");
+        System.out.println("send message type NEW_REQUEST to receiver");
         webSocketHandler.sendToUser(request.getSenderId(), request, "NEW_RESPONSE");
-
+        System.out.println("send message type NEW_RESPONSE to sender");
         return "Request has been sent successfully";
 
     }

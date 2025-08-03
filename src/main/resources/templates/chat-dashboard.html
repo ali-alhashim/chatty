@@ -171,7 +171,8 @@
     socket.onclose = () => console.log("WebSocket disconnected.");
 
     function addPendingRequest(request) {
-         const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+         const csrfToken = document.getElementsByName("_csrf")[0].value;
+         console.log(csrfToken);
          const csrfParam = '_csrf';
 
         const container = document.getElementById("pending-requests-container");
