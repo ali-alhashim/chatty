@@ -187,7 +187,12 @@ public class ChatController {
     @GetMapping("/search-users")
     @ResponseBody
     public List<Map<String, String>> searchUsers(@RequestParam String query, HttpSession session) {
-        User currentUser = (User) session.getAttribute("user");
+        User sessionUser = (User) session.getAttribute("user");
+        User currentUser = userRepository.findById(sessionUser.getId()).orElse(null);
+        if(currentUser ==null)
+        {
+            System.out.println("current user is null !");
+        }
 
         // Exclude yourself from the results
         // Exclude existing contacts
@@ -203,10 +208,15 @@ public class ChatController {
 
 
     @PostMapping("/add-contact")
-    public String addContact(@RequestParam String contactSearch, HttpSession session, RedirectAttributes redirectAttributes) {
+    public String addContactRequest(@RequestParam String contactSearch, HttpSession session, RedirectAttributes redirectAttributes) {
 
 
-        User currentUser = (User) session.getAttribute("user");
+        User sessionUser = (User) session.getAttribute("user");
+        User currentUser = userRepository.findById(sessionUser.getId()).orElse(null);
+        if(currentUser ==null)
+        {
+            System.out.println("user is null");
+        }
         Optional<User> found = userRepository.findByName(contactSearch);
 
         if (found.isEmpty()) {
@@ -238,7 +248,8 @@ public class ChatController {
         }
 
         //make sure the request is for current user
-        User currentUser = (User) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
+        User sessionUser = (User) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
+        User currentUser = userRepository.findById(sessionUser.getId()).orElse(null);
         if(currentUser ==null)
         {
             redirectAttributes.addFlashAttribute("error", "user not found.");

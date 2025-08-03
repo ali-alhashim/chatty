@@ -53,6 +53,12 @@ public class UserService {
             return "Contact  already exist.";
         }
 
+        Optional<ContactRequest> existing3 = contactRequestRepository.findBySenderIdAndReceiverIdAndStatus( receiverId, senderId, ContactRequestStatus.ACCEPTED);
+        if (existing3.isPresent()) {
+            System.out.println("Contact  already exist ");
+            return "Contact  already exist.";
+        }
+
         User senderUser = userRepository.findById(senderId).orElse(null);
         User receiverUser = userRepository.findById(receiverId).orElse(null);
         if(senderUser ==null)
